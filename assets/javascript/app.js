@@ -95,4 +95,15 @@ $(document).ready(function(){
     $.each(questionOptions, function(index, key){
       $('#options').append($('<button class="option btn btn-info btn-lg">'+key+'</button>'));
     })
+    timerRunning : function(){
+
+        if(trivia.timer > -1 && trivia.currentSet < Object.keys(trivia.questions).length){
+            $('#timer').text(trivia.timer);
+            trivia.timer--;
+              if(trivia.timer === 4){
+                $('#timer').addClass('last-seconds');
+              }
+          }
+        
+
     
