@@ -18,22 +18,24 @@ $(document).ready(function(){
     timerId : '',
     // questions options and answers data
     questions: {
-      q1:
+      q1: "Which team is as well-known for their comic antics as for their on-court skills?"
       q2: 
       q3: 
       q4: 
       q5:
       q6: 
-      q7: 
+      q7:
+      q8: 
     },
     options: {
-      q1: [],
+      q1: [New Zealand Rugby Team, Miami Dolphins, Harlem Globetrotters, Flint Tropics],
       q2: [],
       q3: [],
       q4: [],
       q5: [],
       q6: [],
       q7: []
+      q8: []
     },
     answers: {
       q1: 
@@ -43,6 +45,7 @@ $(document).ready(function(){
       q5: 
       q6: 
       q7: 
+      q8:
     },
    
    // trivia methods
@@ -105,5 +108,78 @@ $(document).ready(function(){
               }
           }
         
+          else if(trivia.timer === -1){
+            trivia.unanswered++;
+            trivia.result = false;
+            clearInterval(trivia.timerId);
+            resultId = setTimeout(trivia.guessResult, 1000);
+            $('#results').html('<h3>Out of time! The answer was '+ Object.values(trivia.answers)[trivia.currentSet] +'</h3>');
+          }
+          // if all the questions have been shown end the game, show results
+          else if(trivia.currentSet === Object.keys(trivia.questions).length){
+            
+            // adds results of game (correct, incorrect, unanswered) to the page
+            $('#results')
+              .html('<h3>Thank you for playing!</h3>'+
+              '<p>Correct: '+ trivia.correct +'</p>'+
+              '<p>Incorrect: '+ trivia.incorrect +'</p>'+
+              '<p>Unaswered: '+ trivia.unanswered +'</p>'+
+              '<p>Please play again!</p>');
+            
+            // hide game sction
+            $('#game').hide();
+            
+            // show start button to begin a new game
+            $('#start').show();
+          }
+          
+        },
+        // method to evaluate the option clicked
+        guessChecker : function() {
+          
+          // timer ID for gameResult setTimeout
+          var resultId;
+          
+          // the answer to the current question being asked
+          var currentAnswer = Object.values(trivia.answers)[trivia.currentSet];
+          
+          // if the text of the option picked matches the answer of the current question, increment correct
+          if($(this).text() === currentAnswer){
+            // turn button green for correct
+            $(this).addClass('btn-success').removeClass('btn-info');
+            
+            trivia.correct++;
+            clearInterval(trivia.timerId);
+            resultId = setTimeout(trivia.guessResult, 1000);
+            $('#results').html('<h3>Correct Answer!</h3>');
+          }
+          // else the user picked the wrong option, increment incorrect
+          else{
+            // turn button clicked red for incorrect
+            $(this).addClass('btn-danger').removeClass('btn-info');
+            
+            trivia.incorrect++;
+            clearInterval(trivia.timerId);
+            resultId = setTimeout(trivia.guessResult, 1000);
+            $('#results').html('<h3>Better luck next time! '+ currentAnswer +'</h3>');
+          }
+          
+        },
+        // method to remove previous question results and options
+        guessResult : function(){
+          
+          // increment to next question set
+          trivia.currentSet++;
+          
+          // remove the options and results
+          $('.option').remove();
+          $('#results h3').remove();
+          
+          // begin next question
+          trivia.nextQuestion();
+           
+        }
+      
+      }
 
     
