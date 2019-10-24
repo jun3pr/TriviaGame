@@ -1,185 +1,173 @@
-$(document).ready(function(){
-  
-    // event listeners
-    $("#remaining-time").hide();
-    $("#start").on('click', trivia.startGame);
-    $(document).on('click' , '.option', trivia.guessChecker);
-    
-  })
-  
-  var trivia = {
-    // trivia properties
-    correct: 0,
-    incorrect: 0,
-    unanswered: 0,
-    currentSet: 0,
-    timer: 20,
-    timerOn: false,
-    timerId : '',
-    // questions options and answers data
-    questions: {
-      q1: "Which team is as well-known for their comic antics as for their on-court skills?"
-      q2: 
-      q3: 
-      q4: 
-      q5:
-      q6: 
-      q7:
-      q8: 
-    },
-    options: {
-      q1: [New Zealand Rugby Team, Miami Dolphins, Harlem Globetrotters, Flint Tropics],
-      q2: [],
-      q3: [],
-      q4: [],
-      q5: [],
-      q6: [],
-      q7: []
-      q8: []
-    },
-    answers: {
-      q1: 
-      q2: 
-      q3: 
-      q4: 
-      q5: 
-      q6: 
-      q7: 
-      q8:
-    },
-   
-   // trivia methods
-  
-  startGame: function(){
-    // restarting game results
-    trivia.currentSet = 0;
-    trivia.correct = 0;
-    trivia.incorrect = 0;
-    trivia.unanswered = 0;
-    clearInterval(trivia.timerId);
-    
-    // show game section
-    $('#game').show();
-    
-    //  empty last results
-    $('#results').html('');
-    
-    // show timer
-    $('#timer').text(trivia.timer);
-    
-    // remove start button
-    $('#start').hide();
 
-    $('#remaining-time').show();
-    
-    
-    trivia.nextQuestion();
-  }
-  nextQuestion : function(){
-    
-    
-    trivia.timer = 10;
-     $('#timer').removeClass('last-seconds');
-    $('#timer').text(trivia.timer);
-    
-    
-    if(!trivia.timerOn){
-      trivia.timerId = setInterval(trivia.timerRunning, 1000);
-    }
-    
-    
-    var questionContent = Object.values(trivia.questions)[trivia.currentSet];
-    $('#question').text(questionContent);
-    
-    // an array of all the user options for the current question
-    var questionOptions = Object.values(trivia.options)[trivia.currentSet];
-    
-    // creates all the trivia guess options in the html
-    $.each(questionOptions, function(index, key){
-      $('#options').append($('<button class="option btn btn-info btn-lg">'+key+'</button>'));
-    })
-    timerRunning : function(){
-
-        if(trivia.timer > -1 && trivia.currentSet < Object.keys(trivia.questions).length){
-            $('#timer').text(trivia.timer);
-            trivia.timer--;
-              if(trivia.timer === 4){
-                $('#timer').addClass('last-seconds');
-              }
-          }
-        
-          else if(trivia.timer === -1){
-            trivia.unanswered++;
-            trivia.result = false;
-            clearInterval(trivia.timerId);
-            resultId = setTimeout(trivia.guessResult, 1000);
-            $('#results').html('<h3>Out of time! The answer was '+ Object.values(trivia.answers)[trivia.currentSet] +'</h3>');
-          }
-          // if all the questions have been shown end the game, show results
-          else if(trivia.currentSet === Object.keys(trivia.questions).length){
-            
-            // adds results of game (correct, incorrect, unanswered) to the page
-            $('#results')
-              .html('<h3>Thank you for playing!</h3>'+
-              '<p>Correct: '+ trivia.correct +'</p>'+
-              '<p>Incorrect: '+ trivia.incorrect +'</p>'+
-              '<p>Unaswered: '+ trivia.unanswered +'</p>'+
-              '<p>Please play again!</p>');
-            
-            // hide game sction
-            $('#game').hide();
-            
-            // show start button to begin a new game
-            $('#start').show();
-          }
-          
-        },
-        // method to evaluate the option clicked
-        guessChecker : function() {
-          
-          // timer ID for gameResult setTimeout
-          var resultId;
-          
-          // the answer to the current question being asked
-          var currentAnswer = Object.values(trivia.answers)[trivia.currentSet];
-          
-          // if the text of the option picked matches the answer of the current question, increment correct
-          if($(this).text() === currentAnswer){
-            // turn button green for correct
-            $(this).addClass('btn-success').removeClass('btn-info');
-            
-            trivia.correct++;
-            clearInterval(trivia.timerId);
-            resultId = setTimeout(trivia.guessResult, 1000);
-            $('#results').html('<h3>Correct Answer!</h3>');
-          }
-          // else the user picked the wrong option, increment incorrect
-          else{
-            // turn button clicked red for incorrect
-            $(this).addClass('btn-danger').removeClass('btn-info');
-            
-            trivia.incorrect++;
-            clearInterval(trivia.timerId);
-            resultId = setTimeout(trivia.guessResult, 1000);
-            $('#results').html('<h3>Better luck next time! '+ currentAnswer +'</h3>');
-          }
-          
-        },
-        // method to remove previous question results and options
-        guessResult : function(){
-          
-          // increment to next question set
-          trivia.currentSet++;
-          
-          // remove the options and results
-          $('.option').remove();
-          $('#results h3').remove();
-          
-          // begin next question
-          trivia.nextQuestion();
-           
-        }
-      
-      }
-
+      // ----------------------------TRIVIA GAME----------------------------
+  
+      let correctAnswers = 0;
+      let incorrectAnswers = 0;
+      let unansweredQuestions = 0;
+      let timeRemaining = 15;
+      let intervalID;
+      let indexQandA = 0; //index to load a different question each round without the game reset or screen refresh
+      let answered = false; //letiable to stop the timer if user has clicked an answer
+      let correct;
+      let triviaGame = [{
+          question: "Which team is as well-known for their comic antics as for their on-court skills?",
+          answer: ["New Zealand Rugby Team, Miami Dolphins, Harlem Globetrotters, Flint Tropics"],
+          correct: "2",
+          image: ("assets/images/globetrotters.jpg")
+      }, {
+          question: " Which is the only Major League Baseball team to never make it to a World Series?",
+          answer:  ["Seattle Mariners, Miami Marlins, Kansas City Royals, Toronto Blue Jays"],
+          correct: "0",
+          image: ("assets//images/mariner.jpg")
+      }, {
+          question: " Indy 500 winners celebrate winning by drinking what?",
+          answer:   ["Beer, Tomato Juice, Water, Milk"],
+          correct: "3",
+          image: ("assets//images/milk.jpg")
+      }, {
+          question: "In the game of darts what is the highest possible score using three darts?",
+          answer: ["220, 180, 140, 100"],
+          correct: "1",
+          image: ("assets//images/dart.png")
+      }, {
+          question: "What team does Lionel Messi play for? ",
+          answer:   ["Barcelona, Spain, Juventus, Real Madrid"],
+          correct: "0",
+          image: ("assets/images/Messi.jpg")
+      }, {
+          question: "Which country won the first World Cup?",
+          answer:   ["Germany, Brazil, Uruguay, United States”] 
+          correct: "2",
+          image: ("assets//images/uruguay-flag.jpg")
+      }, {
+          question: "Who is the only athlete to appear in a Football game and a Baseball game on the same day?",
+          answer:   ["Germany, Brazil, Uruguay, United States”] 
+          correct: "2",
+          image: ("assets//images/Deion.jpg")
+      }, {
+          question: "Who has won the most Major Championships in golf history?",
+          answer:  ["Tiger Woods, Walter Hagen, Arnold Palmer, Jack Nicklaus];
+          correct: "3",
+          image: ("assets//images/jack-nicklaus.jpeg")
+      }];
+  
+      // ------------- FUNCTION DECLARATIONS ----------------------------
+  
+  
+      function startGame() {
+          console.log("game has begun");
+          $('.start-button').remove();
+          correctAnswers = 0;
+          incorrectAnswers = 0;
+          unansweredQuestions = 0;
+          loadQandA();
+      }
+  
+      function loadQandA() {
+          // console.log(correctAnswers);
+          // console.log(incorrectAnswers);
+          // console.log(unansweredQuestions);
+          // console.log(indexQandA);
+          answered = false; // will allow timeRemaining to be pushed back to <h5> after round reset....else statement in function timer()
+          timeRemaining = 15;
+          intervalID = setInterval(timer, 1000);
+          if (answered === false) {
+              timer();
+          }
+          correct = triviaGame[indexQandA].correct;
+          let question = triviaGame[indexQandA].question;
+          $('.question').html(question);
+          for (let i = 0; i < 4; i++) {
+              let answer = triviaGame[indexQandA].answer[i];
+              $('.answers').append('<h4 class= answersAll id=' + i + '>' + answer + '</h4>');
+          }
+  
+          $("h4").click(function () {
+              let id = $(this).attr('id');
+              // alert(id);
+              if (id === correct) {
+                  answered = true; // stops the timer
+                  // alert("correct answer");
+                  $('.question').text("THE ANSWER IS: " + triviaGame[indexQandA].answer[correct]);
+                  correctAnswer();
+              } else {
+                  answered = true; //stops the timer
+                  // alert("incorrect answer");
+                  $('.question').text("YOU CHOSE: " + triviaGame[indexQandA].answer[id] + ".....HOWEVER THE ANSWER IS: " + triviaGame[indexQandA].answer[correct]);
+                  incorrectAnswer();
+              }
+          });
+      }
+  
+      function timer() {
+          if (timeRemaining === 0) {
+              answered = true;
+              clearInterval(intervalID);
+              $('.question').text("THE CORRECT ANSWER IS: " + triviaGame[indexQandA].answer[correct]);
+              unAnswered();
+          } else if (answered === true) {
+              clearInterval(intervalID);
+          } else {
+              timeRemaining--;
+              $('.timeRemaining').text('YOU HAVE ' + timeRemaining + ' SECONDS TO CHOOSE');
+          }
+      }
+  
+      function correctAnswer() {
+          correctAnswers++;
+          $('.timeRemaining').text("YOU HAVE ANSWERED CORRECTLY!").css({
+              
+          });
+          resetRound();
+      }
+  
+      function incorrectAnswer() {
+          incorrectAnswers++;
+          $('.timeRemaining').text("YOU HAVE ANSWERED INCORRECTLY!").css({
+              
+          });
+          resetRound();
+  
+      }
+  
+      function unAnswered() {
+          unansweredQuestions++;
+          $('.timeRemaining').text("YOU FAILED TO CHOOSE AN ANSWER").css({
+              
+          });
+          resetRound();
+      }
+  
+      function resetRound() {
+          $('.answersAll').remove();
+          $('.answers').append('<img class=answerImage width="150" height="150" src="' + triviaGame[indexQandA].image + ' ">'); // adds answer image
+          indexQandA++; // increments index which will load next question when loadQandA() is called again
+          if (indexQandA < triviaGame.length) {
+              setTimeout(function () {
+                  loadQandA();
+                  $('.answerImage').remove();
+              }, 5000); // removes answer image from previous round
+          } else {
+              setTimeout(function () {
+                  $('.question').remove();
+                  $('.timeRemaining').remove();
+                  $('.answerImage').remove();
+                  $('.answers').append('<h4 class= answersAll end>CORRECT ANSWERS: ' + correctAnswers + '</h4>');
+                  $('.answers').append('<h4 class= answersAll end>INCORRECT ANSWERS: ' + incorrectAnswers + '</h4>');
+                  $('.answers').append('<h4 class= answersAll end>UNANSWERED QUESTIONS: ' + unansweredQuestions + '</h4>');
+                  setTimeout(function () {
+                      location.reload();
+                  }, 7000);
+              }, 5000);
+          }
+      };
+  
+      $('.startButton').on("click", function () {
+          $('.startButton');
+          startGame();
+  
+      });
+  
+  
+  
     
